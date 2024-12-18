@@ -22,7 +22,7 @@ const AdminLogin = () => {
       setSuccess("Login realizado com sucesso!");
 
       // Redirecionar para a página de edição de produtos
-      navigate("/edit-products");
+      navigate("/admin/editar-produtos");
     } catch (err) {
       setError("Senha incorreta.");
     }
