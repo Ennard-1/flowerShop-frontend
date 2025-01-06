@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api"; // Axios configurado com baseURL do backend
 import EditProductDialog from "../components/EditProductDialog";
+import TagManagerDialog from "../components/TagManagerDialog";
 
 
 const ProductList = () => {
     const [products, setProducts] = useState([]);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-
+    const [showTagDialog, setShowTagDialog] = useState(false);
     // Carregar os produtos ao montar o componente
     useEffect(() => {
         const fetchProducts = async () => {
@@ -41,6 +42,7 @@ const ProductList = () => {
         }
 
         try {
+            console.log(updatedProduct)
             const response = await api.put(
                 `/products/${updatedProduct.id}`,
                 updatedProduct,
@@ -80,14 +82,21 @@ const ProductList = () => {
             </div>
 
             {/* Modal para editar produto */}
+
+            <button onClick={() => setShowTagDialog(true)}>Gerenciar Tags</button>
+            {showTagDialog && (
+                <TagManagerDialog onClose={() => setShowTagDialog(false)} />
+            )}
             {isDialogOpen && selectedProduct && (
                 <EditProductDialog
+                    isOpen={handleEdit}
                     product={selectedProduct}
                     onClose={handleDialogClose}
                     onSave={handleSave}
                 />
             )}
         </div>
+
     );
 };
 

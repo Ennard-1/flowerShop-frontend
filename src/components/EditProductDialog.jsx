@@ -1,88 +1,152 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "../services/api";
 
-const EditProductDialog = ({ product, onClose, onSave }) => {
-  const [formData, setFormData] = useState({
-    id: product.id,
-    name: product.name,
-    quantity: product.quantity,
-    price: product.price,
-  });
+const EditProductDialog = ({ product, isOpen, onClose, onSave }) => {
+  const [name, setName] = useState(product?.name || "");
+  const [description, setDescription] = useState(product?.description || "");
+  const [price, setPrice] = useState(product?.price || 0);
+  const [quantity, setQuantity] = useState(product?.quantity || 0);
+  const [availableTags, setAvailableTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "price" || name === "quantity" ? parseFloat(value) : value,
-    }));
+  // Carregar todas as tags disponíveis ao abrir o dialog
+  useEffect(() => {
+    if (isOpen) {
+      fetchTags();
+      if (product?.tags) {
+        // Se o produto já tiver tags, setar as tags selecionadas com base nisso
+        const productTagIds = product.tags.map(tag => tag.id);
+        setSelectedTags(productTagIds);
+      }
+    }
+  }, [isOpen, product]);
+
+  const fetchTags = async () => {
+    try {
+      const response = await api.get("/tag");
+      setAvailableTags(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar tags:", error);
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(formData); // Enviar os dados editados para o pai
+  const handleTagChange = (tagId) => {
+    if (selectedTags.includes(tagId)) {
+      setSelectedTags(selectedTags.filter((id) => id !== tagId));
+    } else {
+      setSelectedTags([...selectedTags, tagId]);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const updatedProduct = {
+        name,
+        description,
+        price,
+        quantity,
+        tags: selectedTags, // Passando as tags selecionadas diretamente
+      };
+
+      console.log(updatedProduct)
+      if (product?.id) {
+        await api.put(`/products/${product.id}`, updatedProduct);
+      } else {
+        const response = await api.post("/products", updatedProduct);
+      }
+
+      onSave(); // Atualiza a lista de produtos no componente pai
+      onClose();
+    } catch (error) {
+      console.error("Erro ao salvar produto:", error);
+    }
   };
 
   return (
-    <div className="modal show d-block" tabIndex="-1">
-      <div className="modal-dialog">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Editar Produto</h5>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={onClose}
-            ></button>
-          </div>
-          <div className="modal-body">
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label htmlFor="name" className="form-label">
-                  Nome do Produto
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="quantity" className="form-label">
-                  Quantidade
-                </label>
-                <input
-                  type="number"
-                  className="form-control"
-                  id="quantity"
-                  name="quantity"
-                  value={formData.quantity}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="price" className="form-label">
-                  Preço (R$)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="form-control"
-                  id="price"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                />
-              </div>
-              <button type="submit" className="btn btn-primary">
-                Salvar
-              </button>
-            </form>
+    isOpen && (
+      <div className="modal fade show" style={{ display: isOpen ? 'block' : 'none' }} aria-labelledby="productModalLabel" aria-hidden={!isOpen}>
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="productModalLabel">{product ? "Editar Produto" : "Adicionar Produto"}</h5>
+              <button type="button" className="btn-close" onClick={onClose} aria-label="Close"></button>
+            </div>
+            <div className="modal-body">
+              <form>
+                <div className="mb-3">
+                  <label htmlFor="productName" className="form-label">Nome:</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="productName"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="productDescription" className="form-label">Descrição:</label>
+                  <textarea
+                    className="form-control"
+                    id="productDescription"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="productPrice" className="form-label">Preço:</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    id="productPrice"
+                    step="0.01"
+                    value={price}
+                    onChange={(e) => setPrice(parseFloat(e.target.value))}
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="productQuantity" className="form-label">Quantidade:</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    id="productQuantity"
+                    value={quantity}
+                    onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Tags:</label>
+                  <div className="d-flex flex-wrap gap-2">
+                    {availableTags.map((tag) => (
+                      <div key={tag.id} className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={selectedTags.includes(tag.id)}
+                          onChange={() => handleTagChange(tag.id)}
+                          id={`tag${tag.id}`}
+                        />
+                        <label className="form-check-label" htmlFor={`tag${tag.id}`}>
+                          {tag.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+              <button type="button" className="btn btn-primary" onClick={handleSave}>Salvar</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+    )
   );
 };
 
