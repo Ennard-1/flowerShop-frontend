@@ -34,7 +34,7 @@ const TagManagerDialog = ({ onClose }) => {
   // Deletar uma tag
   const handleDeleteTag = async (tagId) => {
     try {
-      await api.delete(`/api/tag/${tagId}`);
+      await api.delete(`/tag/${tagId}`);
       setTags((prev) => prev.filter((tag) => tag.id !== tagId)); // Remover a tag da lista
     } catch (error) {
       console.error("Erro ao deletar tag:", error);
