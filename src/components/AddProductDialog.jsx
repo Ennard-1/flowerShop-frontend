@@ -11,8 +11,6 @@ const AddProductDialog = ({ isOpen, onClose }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        // Se o campo for "price", substituir vírgulas por pontos
         const formattedValue = name === "price" ? value.replace(",", ".") : value;
         setFormData({ ...formData, [name]: formattedValue });
     };
@@ -21,73 +19,109 @@ const AddProductDialog = ({ isOpen, onClose }) => {
         e.preventDefault();
 
         try {
-            // Fazendo a requisição para criar o produto
-            const response = await api.post("/products", formData);
-            console.log("Produto criado com sucesso:", response.data);
+            await api.post("/products", formData);
+            console.log("Produto criado com sucesso");
             onClose(); // Fecha o modal após a criação do produto
         } catch (error) {
             console.error("Erro ao criar produto:", error);
         }
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="dialog-backdrop">
-            <div className="dialog">
-                <h2>Adicionar Produto</h2>
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="name">Nome</label>
-                        <input
-                            type="text"
-                            id="name"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            required
-                        />
+        isOpen && (
+            <div
+                className="modal fade show"
+                style={{ display: isOpen ? "block" : "none" }}
+                aria-labelledby="addProductModalLabel"
+                aria-hidden={!isOpen}
+            >
+                <div className="modal-dialog">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title" id="addProductModalLabel">
+                                Adicionar Produto
+                            </h5>
+                            <button
+                                type="button"
+                                className="btn-close"
+                                onClick={onClose}
+                                aria-label="Close"
+                            ></button>
+                        </div>
+                        <form onSubmit={handleSubmit}>
+                            <div className="modal-body">
+                                <div className="mb-3">
+                                    <label htmlFor="name" className="form-label">
+                                        Nome
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        id="name"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="description" className="form-label">
+                                        Descrição
+                                    </label>
+                                    <textarea
+                                        className="form-control"
+                                        id="description"
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="price" className="form-label">
+                                        Preço
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        id="price"
+                                        name="price"
+                                        value={formData.price}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="quantity" className="form-label">
+                                        Quantidade
+                                    </label>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        id="quantity"
+                                        name="quantity"
+                                        value={formData.quantity}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={onClose}
+                                >
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="btn btn-primary">
+                                    Adicionar
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="description">Descrição</label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="price">Preço</label>
-                        <input
-                            type="text" // Alterado para texto para permitir entrada flexível (incluindo vírgulas)
-                            id="price"
-                            name="price"
-                            value={formData.price}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="quantity">Quantidade</label>
-                        <input
-                            type="number"
-                            id="quantity"
-                            name="quantity"
-                            value={formData.quantity}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-                    <div className="form-actions">
-                        <button type="submit">Adicionar</button>
-                        <button type="button" onClick={onClose}>
-                            Cancelar
-                        </button>
-                    </div>
-                </form>
+                </div>
             </div>
-        </div>
+        )
     );
 };
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
 
-const TagManagerDialog = ({ onClose }) => {
+const TagManagerDialog = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
   const [tags, setTags] = useState([]);
   const [newTagName, setNewTagName] = useState("");
 

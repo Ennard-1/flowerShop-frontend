@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from "react";
-import api from "../services/api"; // Axios configurado com baseURL do backend
+import api from "../services/api";
 import EditProductDialog from "../components/EditProductDialog";
-import TagManagerDialog from "../components/TagManagerDialog";
+import EditProductImagesDialog from "../components/EditProductImagesDialog";
 import AddProductDialog from "../components/AddProductDialog";
+import TagManagerDialog from "../components/TagManagerDialog";
 
 const ProductList = () => {
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedProduct, setSelectedProduct] = useState(null);
-    const [showEditDialog, setShowEditDialog] = useState(false);
-    const [showAddDialog, setShowAddDialog] = useState(false);
-    const [showTagDialog, setShowTagDialog] = useState(false);
 
-    // Carregar os produtos ao montar o componente
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
+    const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await api.get("/products"); // Sua rota para listar produtos
+                const response = await api.get("/products");
                 setProducts(response.data);
                 setFilteredProducts(response.data);
             } catch (error) {
@@ -28,7 +30,6 @@ const ProductList = () => {
         fetchProducts();
     }, []);
 
-    // Filtrar produtos com base no termo de pesquisa
     useEffect(() => {
         setFilteredProducts(
             products.filter((product) =>
@@ -37,42 +38,36 @@ const ProductList = () => {
         );
     }, [searchTerm, products]);
 
-    const handleEdit = (product) => {
+    const handleEditClick = (product) => {
         setSelectedProduct(product);
-        setShowEditDialog(true);
+        setIsEditDialogOpen(true);
     };
 
-    const handleEditClose = () => {
-        setSelectedProduct(null);
-        setShowEditDialog(false);
-    };
-
-    const handleAddClose = () => {
-
-        setShowAddDialog(false);
+    const handleImagesClick = (product) => {
+        setSelectedProduct(product);
+        setIsImageDialogOpen(true);
     };
 
     return (
-        <div className="flex h-screen">
-            {/* Sidebar */}
-            <div className="w-1/4 bg-gray-100 p-4">
-                <h2 className="text-xl font-bold mb-4">Menu</h2>
+        <div className="flex flex-col h-screen">
+            {/* Barra Superior */}
+            <div className="flex justify-between bg-gray-100 p-4">
                 <button
-                    className="w-full bg-blue-500 text-white py-2 rounded mb-4"
-                    onClick={() => setShowAddDialog(true)}
+                    className="bg-blue-500 text-white py-2 px-4 rounded"
+                    onClick={() => setIsAddDialogOpen(true)}
                 >
                     Adicionar Produto
                 </button>
                 <button
-                    className="w-full bg-green-500 text-white py-2 rounded"
-                    onClick={() => setShowTagDialog(true)}
+                    className="bg-green-500 text-white py-2 px-4 rounded"
+                    onClick={() => setIsTagDialogOpen(true)}
                 >
                     Gerenciar Tags
                 </button>
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 p-6">
+            {/* Conteúdo Principal */}
+            <div className="flex-1 p-6 overflow-auto">
                 <h1 className="text-2xl font-bold mb-6 text-center">Lista de Produtos</h1>
 
                 {/* Barra de Pesquisa */}
@@ -88,34 +83,60 @@ const ProductList = () => {
                 <div className="grid grid-cols-3 gap-4">
                     {filteredProducts.map((product) => (
                         <div
-                            className="border p-4 rounded shadow cursor-pointer hover:shadow-lg"
+                            className="flex items-center border p-4 rounded shadow hover:shadow-lg"
                             key={product.id}
-                            onClick={() => handleEdit(product)}
                         >
-                            <h5 className="text-lg font-bold">{product.name}</h5>
-                            <p className="text-gray-700">Quantidade: {product.quantity}</p>
-                            <p className="text-gray-700">Preço: R$ {product.price.toFixed(2)}</p>
+                            {/* Imagem */}
+                            <img
+                                src={product.imageUrl}
+                                alt={product.name}
+                                className="w-16 h-16 object-cover rounded mr-4"
+                            />
+                            {/* Informações */}
+                            <div className="flex-1">
+                                <h5 className="text-lg font-bold">{product.name}</h5>
+                                <p className="text-gray-700">Quantidade: {product.quantity}</p>
+                                <p className="text-gray-700">Preço: R$ {product.price.toFixed(2)}</p>
+                            </div>
+                            {/* Botões */}
+                            <div className="flex flex-col space-y-2">
+                                <button
+                                    className="bg-blue-500 text-white py-1 px-2 rounded"
+                                    onClick={() => handleEditClick(product)}
+                                >
+                                    Editar
+                                </button>
+                                <button
+                                    className="bg-gray-500 text-white py-1 px-2 rounded"
+                                    onClick={() => handleImagesClick(product)}
+                                >
+                                    Imagens
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
 
             {/* Dialogs */}
-            {showTagDialog && (
-                <TagManagerDialog onClose={() => setShowTagDialog(false)} />
-            )}
-            {showEditDialog && (
-                <EditProductDialog
-                    isOpen={showEditDialog}
-                    product={selectedProduct}
-                    onClose={handleEditClose}
-                />
-            )}
-            {showAddDialog && (
-                <AddProductDialog
-                    isOpen={showAddDialog}
-                    onClose={handleAddClose} />
-            )}
+            <EditProductDialog
+                isOpen={isEditDialogOpen}
+                product={selectedProduct}
+                onClose={() => setIsEditDialogOpen(false)}
+            />
+            <EditProductImagesDialog
+                isOpen={isImageDialogOpen}
+                product={selectedProduct}
+                onClose={() => setIsImageDialogOpen(false)}
+            />
+            <AddProductDialog
+                isOpen={isAddDialogOpen}
+                onClose={() => setIsAddDialogOpen(false)}
+            />
+            <TagManagerDialog
+                isOpen={isTagDialogOpen}
+                onClose={() => setIsTagDialogOpen(false)}
+            />
         </div>
     );
 };
