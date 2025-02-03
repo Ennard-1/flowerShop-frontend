@@ -8,6 +8,8 @@ import NotFound from './pages/NotFound';
 import Catalog from './pages/Catalog';
 import AdminLogin from './pages/AdminLogin';
 import ProductList from './pages/ProductList';
+import ProductDetail from './components/ProductDetail';
+import CartPage from './pages/CartPage';
 
 function App() {
   return (
@@ -20,7 +22,9 @@ function App() {
           <Route path="*" element={<NotFound />} />
           <Route path='/catalogo' element={<Catalog />} />
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path='/admin/editar-produtos' element={<ProductList/>}/>
+          <Route path='/admin/editar-produtos' element={<ProductList />} />
+          <Route path="/catalogo/:id" element={<ProductDetail />} />
+          <Route path='/carrinho' element={<CartPage />} />
         </Routes>
       </main>
       <Footer />
