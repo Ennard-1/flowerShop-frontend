@@ -1,21 +1,20 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Header from './components/Header';
-import Footer from './components/Footer';
+
 import Home from './pages/Home';
 import About from './pages/About';
 import NotFound from './pages/NotFound';
 import Catalog from './pages/Catalog';
 import AdminLogin from './pages/AdminLogin';
 import ProductList from './pages/ProductList';
-import ProductDetail from './components/ProductDetail';
+import ProductDetail from './pages/ProductDetail';
 import CartPage from './pages/CartPage';
 
 function App() {
   return (
     <div>
-      <Header />
-      <main className="container mt-4">
+      {/* <Header /> */}
+      <main >
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
@@ -27,7 +26,7 @@ function App() {
           <Route path='/carrinho' element={<CartPage />} />
         </Routes>
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }

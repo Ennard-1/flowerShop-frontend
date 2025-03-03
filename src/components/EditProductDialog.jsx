@@ -43,15 +43,13 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
       const response = await api.get(`/products/${productId}/tags`);
       console.log("Resposta da API de tags associadas ao produto:", response.data);
   
-      // Extraindo apenas os IDs das tags associadas
       const associatedTags = response.data.map((tag) => tag.tagId);
       setSelectedTags(associatedTags);
-      setInitialTags(associatedTags); // Define as tags iniciais para comparação
+      setInitialTags(associatedTags);
     } catch (error) {
       console.error("Erro ao buscar tags do produto:", error);
     }
   };
-  
 
   const resetForm = () => {
     setName("");
@@ -66,8 +64,8 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
   const handleTagChange = (tagId) => {
     setSelectedTags((prevSelectedTags) =>
       prevSelectedTags.includes(tagId)
-        ? prevSelectedTags.filter((id) => id !== tagId) // Remove se já estiver presente
-        : [...prevSelectedTags, tagId] // Adiciona se não estiver presente
+        ? prevSelectedTags.filter((id) => id !== tagId)
+        : [...prevSelectedTags, tagId]
     );
   };
 
@@ -87,12 +85,10 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
       if (product?.id) {
         await api.put(`/products/${product.id}`, updatedProduct);
 
-        // Adiciona tags ao produto
         for (const tagId of addedTags) {
           await api.post(`/tags/${product.id}/${tagId}`);
         }
 
-        // Remove tags do produto
         for (const tagId of removedTags) {
           await api.delete(`/product/${product.id}/${tagId}`);
         }
@@ -100,147 +96,134 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
         const response = await api.post("/products", updatedProduct);
         const newProductId = response.data.id;
 
-        // Adiciona todas as tags ao novo produto
         for (const tagId of selectedTags) {
           await api.post(`/tags/${newProductId}/${tagId}`);
         }
       }
 
-      onClose(); // Fecha o modal
+      onClose();
     } catch (error) {
       console.error("Erro ao salvar produto:", error);
     }
   };
 
-
   return (
     isOpen && (
       <div
-        className="modal fade show"
-        style={{ display: isOpen ? "block" : "none" }}
+        className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
         aria-labelledby="productModalLabel"
         aria-hidden={!isOpen}
       >
-        <div className="modal-dialog modal-lg">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="productModalLabel">
-                {product ? "Editar Produto" : "Adicionar Produto"}
-              </h5>
+        <div className="bg-white rounded-lg shadow-lg w-full max-w-lg">
+          <div className="flex justify-between items-center p-4 border-b">
+            <h5 className="text-lg font-semibold" id="productModalLabel">
+              {product ? "Editar Produto" : "Adicionar Produto"}
+            </h5>
+            <button
+              type="button"
+              className="text-gray-500 hover:text-gray-700"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <form onSubmit={handleSave} className="p-6">
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="productName" className="block text-sm font-medium text-gray-700">
+                  Nome
+                </label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  id="productName"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="productDescription" className="block text-sm font-medium text-gray-700">
+                  Descrição
+                </label>
+                <textarea
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  id="productDescription"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
+
+        
+
+              <div>
+                <label htmlFor="productPrice" className="block text-sm font-medium text-gray-700">
+                  Preço
+                </label>
+                <input
+                  type="number"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  id="productPrice"
+                  step="0.01"
+                  value={price}
+                  onChange={(e) => setPrice(parseFloat(e.target.value))}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="productQuantity" className="block text-sm font-medium text-gray-700">
+                  Quantidade
+                </label>
+                <input
+                  type="number"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  id="productQuantity"
+                  value={quantity}
+                  onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Tags</label>
+                <div className="flex flex-wrap gap-2">
+                  {availableTags.map((tag) => (
+                    <div key={tag.id} className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={selectedTags.includes(tag.id)}
+                        onChange={() => handleTagChange(tag.id)}
+                        id={`tag${tag.id}`}
+                      />
+                      <label className="form-check-label" htmlFor={`tag${tag.id}`}>
+                        {tag.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-4 mt-6">
               <button
                 type="button"
-                className="btn-close"
-                onClick={onClose}
-                aria-label="Close"
-              ></button>
-            </div>
-            <div className="modal-body">
-              <form>
-                <div className="mb-3">
-                  <label htmlFor="productName" className="form-label">
-                    Nome:
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="productName"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="productDescription" className="form-label">
-                    Descrição:
-                  </label>
-                  <textarea
-                    className="form-control"
-                    id="productDescription"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="productSlug" className="form-label">
-                    Slug:
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="productSlug"
-                    value={slug}
-                    onChange={(e) => setSlug(e.target.value)}
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="productPrice" className="form-label">
-                    Preço:
-                  </label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    id="productPrice"
-                    step="0.01"
-                    value={price}
-                    onChange={(e) => setPrice(parseFloat(e.target.value))}
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="productQuantity" className="form-label">
-                    Quantidade:
-                  </label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    id="productQuantity"
-                    value={quantity}
-                    onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Tags:</label>
-                  <div className="d-flex flex-wrap gap-2">
-                    {availableTags.map((tag) => (
-                      <div key={tag.id} className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={selectedTags.includes(tag.id)} // Verifica a seleção
-                          onChange={() => handleTagChange(tag.id)}
-                          id={`tag${tag.id}`}
-                        />
-                        <label className="form-check-label" htmlFor={`tag${tag.id}`}>
-                          {tag.name}
-                        </label>
-                      </div>
-                    ))}
-
-                  </div>
-                </div>
-
-              </form>
-            </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-secondary"
+                className="px-6 py-2 text-sm font-medium text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300"
                 onClick={onClose}
               >
                 Cancelar
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="px-6 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600"
                 onClick={handleSave}
               >
                 Salvar
               </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     )

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../services/api";
-import "bootstrap/dist/css/bootstrap.min.css";
+
 import { addToCart } from "../services/cart";
 
 const ProductDetail = () => {

@@ -20,8 +20,24 @@ const ProductList = () => {
         const fetchProducts = async () => {
             try {
                 const response = await api.get("/products");
-                setProducts(response.data);
-                setFilteredProducts(response.data);
+                const productsData = response.data;
+
+                // Buscar a primeira imagem para cada produto
+                const productsWithImages = await Promise.all(
+                    productsData.map(async (product) => {
+                        try {
+                            const imageResponse = await api.get(`/products/${product.id}/images`);
+                            const firstImage = imageResponse.data.length > 0 ? imageResponse.data[0].image : null;
+                            return { ...product, image: firstImage };
+                        } catch (error) {
+                            console.error(`Erro ao buscar imagem para o produto ${product.id}:`, error);
+                            return { ...product, image: null };
+                        }
+                    })
+                );
+
+                setProducts(productsWithImages);
+                setFilteredProducts(productsWithImages);
             } catch (error) {
                 console.error("Erro ao carregar produtos:", error);
             }
@@ -88,7 +104,7 @@ const ProductList = () => {
                         >
                             {/* Imagem */}
                             <img
-                                src={product.imageUrl}
+                                 src={product.image ? `${api.defaults.baseURL}${product.image}` : "/placeholder.jpg"}
                                 alt={product.name}
                                 className="w-16 h-16 object-cover rounded mr-4"
                             />

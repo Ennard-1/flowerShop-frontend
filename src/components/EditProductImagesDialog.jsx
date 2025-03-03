@@ -28,6 +28,7 @@ const UploadImageDialog = ({ product, isOpen, onClose }) => {
             setExistingImages([]);
         }
     }, [isOpen]);
+
     // Adicionar novas imagens antes do upload
     const handleAddImages = (e) => {
         const files = Array.from(e.target.files);
@@ -42,15 +43,12 @@ const UploadImageDialog = ({ product, isOpen, onClose }) => {
     // Remover imagem já existente do backend
     const handleRemoveExistingImage = async (img) => {
         try {
-            console.log(img);
             await api.delete(img.image); // Certifique-se de que `img.image` contém a URL correta
-
             setExistingImages((prev) => prev.filter((image) => image.id !== img.id)); // Corrigido para remover a imagem correta
         } catch (error) {
             console.error("Erro ao remover imagem:", error);
         }
     };
-
 
     // Enviar imagens para o backend
     const handleSave = async () => {
@@ -74,84 +72,109 @@ const UploadImageDialog = ({ product, isOpen, onClose }) => {
         }
     };
 
-
     return (
         isOpen && (
-            <div className="modal fade show" style={{ display: "block" }}>
-                <div className="modal-dialog modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title">Gerenciar Imagens do Produto</h5>
-                            <button type="button" className="btn-close" onClick={onClose}></button>
+            <div
+                className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
+                aria-hidden={!isOpen}
+            >
+                <div className="bg-white rounded-lg shadow-lg w-full max-w-lg">
+                    <div className="flex justify-between items-center p-4 border-b">
+                        <h5 className="text-lg font-semibold">
+                            Gerenciar Imagens do Produto
+                        </h5>
+                        <button
+                            type="button"
+                            className="text-gray-500 hover:text-gray-700"
+                            onClick={onClose}
+                            aria-label="Close"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div className="p-6">
+                        {/* Imagens existentes */}
+                        <div>
+                            <h6 className="text-sm font-medium text-gray-700">Imagens já cadastradas:</h6>
+                            <div className="flex flex-wrap gap-2">
+                                {existingImages.length > 0 ? (
+                                    existingImages.map((img) => (
+                                        <div key={img.id} className="relative m-2">
+                                            <img
+                                                src={img.imageUrl}
+                                                alt="Imagem do produto"
+                                                className="w-24 h-24 object-cover rounded-md"
+                                            />
+                                            <button
+                                                className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                                                onClick={() => handleRemoveExistingImage(img)}
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500">Nenhuma imagem cadastrada</p>
+                                )}
+                            </div>
                         </div>
-                        <div className="modal-body">
-                            {/* Imagens existentes */}
-                            <div>
-                                <h6>Imagens já cadastradas:</h6>
-                                <div className="d-flex flex-wrap">
-                                    {existingImages.length > 0 ? (
-                                        existingImages.map((img) => (
-                                            <div key={img.id} className="position-relative m-2">
-                                                <img
-                                                    src={img.imageUrl}
-                                                    alt="Imagem do produto"
-                                                    className="img-thumbnail"
-                                                    style={{ width: 100, height: 100, objectFit: "cover" }}
-                                                />
-                                                <button
-                                                    className="btn btn-danger btn-sm position-absolute top-0 end-0"
-                                                    onClick={() => handleRemoveExistingImage(img)}
-                                                >
-                                                    &times;
-                                                </button>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p>Nenhuma imagem cadastrada</p>
-                                    )}
-                                </div>
-                            </div>
 
-                            {/* Imagens novas */}
-                            <div className="mt-3">
-                                <h6>Novas imagens selecionadas:</h6>
-                                <div className="d-flex flex-wrap">
-                                    {imageFiles.length > 0 ? (
-                                        imageFiles.map((file, index) => (
-                                            <div key={index} className="position-relative m-2">
-                                                <img
-                                                    src={URL.createObjectURL(file)}
-                                                    alt="Nova imagem"
-                                                    className="img-thumbnail"
-                                                    style={{ width: 100, height: 100, objectFit: "cover" }}
-                                                />
-                                                <button
-                                                    className="btn btn-danger btn-sm position-absolute top-0 end-0"
-                                                    onClick={() => handleRemoveNewImage(index)}
-                                                >
-                                                    &times;
-                                                </button>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p>Nenhuma nova imagem selecionada</p>
-                                    )}
-                                </div>
+                        {/* Imagens novas */}
+                        <div className="mt-3">
+                            <h6 className="text-sm font-medium text-gray-700">Novas imagens selecionadas:</h6>
+                            <div className="flex flex-wrap gap-2">
+                                {imageFiles.length > 0 ? (
+                                    imageFiles.map((file, index) => (
+                                        <div key={index} className="relative m-2">
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt="Nova imagem"
+                                                className="w-24 h-24 object-cover rounded-md"
+                                            />
+                                            <button
+                                                className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                                                onClick={() => handleRemoveNewImage(index)}
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500">Nenhuma nova imagem selecionada</p>
+                                )}
                             </div>
+                        </div>
 
-                            {/* Upload */}
+                        {/* Upload */}
+                        <div className="mt-3">
                             <input
                                 type="file"
-                                className="form-control mt-3"
+                                className="block w-full text-sm text-gray-700 border border-gray-300 rounded-md"
                                 accept="image/*"
                                 multiple
                                 onChange={handleAddImages}
                             />
                         </div>
-                        <div className="modal-footer">
-                            <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-                            <button className="btn btn-primary" onClick={handleSave}>Salvar</button>
-                        </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-4 mt-6 p-4 border-t">
+                        <button
+                            type="button"
+                            className="px-6 py-2 text-sm font-medium text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300"
+                            onClick={onClose}
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            className="px-6 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600"
+                            onClick={handleSave}
+                        >
+                            Salvar
+                        </button>
                     </div>
                 </div>
             </div>
