@@ -1,6 +1,5 @@
 import React from "react";
 import PropTypes from "prop-types";
-import Button from "./Button";
 import api from "../services/api";
 
 const formatPrice = (price) => {
@@ -10,75 +9,48 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-const ProductCard = ({
-  product,
-  showImage = true,
-  showName = true,
-  showDescription = true,
-  showPrice = true,
-  showButton = true,
-  buttonVariant = "primary",
-  buttonSize = "medium",
-}) => (
-  <div className="bg-card-background transform rounded-lg p-6 shadow-lg transition hover:scale-105 hover:shadow-xl">
-    {/* Imagem */}
-    {showImage && (
-      <div className="relative mb-4 w-full">
+const ProductCard = ({ product }) => {
+  const isOutOfStock = product.quantity === 0; // Verifica se o produto está fora de estoque
+
+  return (
+    <a
+      href={`/catalogo/${product.id}`}
+      className={`relative block w-full overflow-hidden rounded-md transition-transform hover:scale-105 hover:shadow-lg 
+        ${isOutOfStock ? "cursor-not-allowed" : "cursor-pointer"}`} 
+    >
+      {/* Imagem com proporção 4:3 */}
+      <div className="relative w-full aspect-[3/4]">
         <img
           src={product.image ? `${api.defaults.baseURL}${product.image}` : "/placeholder.jpg"}
           alt={product.name || "Imagem do produto"}
-          className="mx-auto aspect-[3/4] h-auto w-full rounded-md object-cover"
+          className="w-full h-full object-cover"
         />
+
+        {/* Área com blur para nome e preço */}
+        <div className="absolute bottom-0 w-full bg-black/40 backdrop-blur-md p-2 text-center">
+          <h2 className="text-white text-sm font-semibold truncate">{product.name}</h2>
+          <p className="text-secondary text-md font-bold">{formatPrice(product.price)}</p>
+        </div>
+
+        {/* Sobreposição de Fora de Estoque */}
+        {isOutOfStock && (
+          <div className="absolute top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center">
+            <span className="text-white text-center text-2xl font-bold">Fora de Estoque</span>
+          </div>
+        )}
       </div>
-    )}
-
-    {/* Nome e Preço */}
-    <div className="mb-4 grid gap-2">
-      {showName && (
-        <h2 className="text-dark text-xl font-bold">{product.name}</h2>
-      )}
-      {showPrice && (
-        <p className="text-dark text-lg font-bold">
-          {formatPrice(product.price)}
-        </p>
-      )}
-    </div>
-
-    {/* Descrição do produto */}
-    {showDescription && (
-      <p className="text-secondary-text mb-4">{product.description}</p>
-    )}
-
-    {/* Botão Comprar */}
-    {showButton && (
-      <Button
-        variant={buttonVariant}
-        size={buttonSize}
-        className="mt-4 w-full"
-        href={`/catalogo/${product.id}`} // Redireciona para a página do produto
-      >
-        Comprar
-      </Button>
-    )}
-  </div>
-);
+    </a>
+  );
+};
 
 ProductCard.propTypes = {
   product: PropTypes.shape({
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
-    description: PropTypes.string,
     price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-
-    images: PropTypes.array,
+    image: PropTypes.string,
+    quantity: PropTypes.number.isRequired, // Quantidade para verificar o estoque
   }).isRequired,
-  showImage: PropTypes.bool,
-  showName: PropTypes.bool,
-  showDescription: PropTypes.bool,
-  showPrice: PropTypes.bool,
-  showButton: PropTypes.bool,
-  buttonVariant: PropTypes.oneOf(["primary", "secondary", "outline"]),
-  buttonSize: PropTypes.oneOf(["small", "medium", "large"]),
 };
 
 export default ProductCard;
