@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { getCart, updateCartQuantity, removeFromCart, clearCart } from '../services/cart'
+import { motion, AnimatePresence } from "framer-motion";
+import { Trash2 } from "lucide-react";
+import { getCart, updateCartQuantity, removeFromCart, clearCart } from "../services/cart";
 
 const CartPage = () => {
     const [cartItems, setCartItems] = useState([]);
@@ -27,52 +28,101 @@ const CartPage = () => {
     };
 
     const handleCheckout = () => {
-        // Lógica de finalização do pedido (integração com API ou redirecionamento)
         alert("Pedido finalizado com sucesso!");
         clearCart();
         navigate("/");
     };
 
-    if (cartItems.length === 0) {
-        return <p className="text-center mt-5 fs-4">Seu carrinho está vazio.</p>;
-    }
-
     const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
     return (
-        <div className="container my-5">
-            <h1 className="text-center mb-4">Carrinho de Compras</h1>
+        <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="bg-background min-h-screen px-4 py-10"
+        >
+            <div className="bg-background min-h-screen px-4 py-10">
+                <div className="container mx-auto max-w-4xl">
+                    <h1 className="mb-8 text-center text-3xl font-bold text-dark">Carrinho de Compras</h1>
 
-            <div className="list-group mb-4">
-                {cartItems.map((item) => (
-                    <div key={item.id} className="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 className="mb-1">{item.name}</h5>
-                            <p className="mb-1 text-muted">R$ {item.price.toFixed(2)}</p>
-                        </div>
-                        <div className="d-flex align-items-center">
-                            <input
-                                type="number"
-                                className="form-control me-2"
-                                style={{ width: "80px" }}
-                                value={item.quantity}
-                                min="1"
-                                onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value))}
-                            />
-                            <button className="btn btn-danger" onClick={() => handleRemoveItem(item.id)}>Remover</button>
-                        </div>
-                    </div>
-                ))}
-            </div>
+                    {cartItems.length === 0 ? (
+                        <p className="text-center text-muted text-lg">Seu carrinho está vazio.</p>
+                    ) : (
+                        <>
+                            <div className="space-y-4">
+                                <AnimatePresence>
+                                    {cartItems.map((item) => (
+                                        <motion.div
+                                            key={item.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 20 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="mb-4 flex items-start justify-between gap-4 rounded-lg bg-white p-4 shadow-md flex-row sm:items-center"
+                                        >
+                                            <div>
+                                                <h5 className="text-lg font-semibold text-dark">{item.name}</h5>
+                                                <p className="text-muted text-sm">R$ {item.price.toFixed(2)}</p>
+                                            </div>
 
-            <div className="d-flex justify-content-between align-items-center">
-                <h4>Total: <span className="text-success">R$ {totalPrice.toFixed(2)}</span></h4>
-                <div>
-                    <button className="btn btn-secondary me-3" onClick={handleClearCart}>Limpar Carrinho</button>
-                    <button className="btn btn-primary" onClick={handleCheckout}>Finalizar Pedido</button>
+                                            <div className="flex items-center gap-3">
+                                                {/* Controle de Quantidade */}
+                                                <div className="flex items-center border rounded-lg overflow-hidden">
+                                                    <button
+                                                        className="px-3 py-1 text-xl bg-gray-200 hover:bg-gray-300"
+                                                        onClick={() => handleQuantityChange(item.id, Math.max(1, item.quantity - 1))}
+                                                    >
+                                                        −
+                                                    </button>
+                                                    <div className="w-10 text-center text-lg font-medium">{item.quantity}</div>
+                                                    <button
+                                                        className="px-3 py-1 text-xl bg-gray-200 hover:bg-gray-300"
+                                                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+
+                                                {/* Botão de Remover */}
+                                                <button
+                                                    className="text-red-500 hover:text-red-700"
+                                                    onClick={() => handleRemoveItem(item.id)}
+                                                    aria-label="Remover item"
+                                                >
+                                                    <Trash2 size={24} />
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                            </div>
+
+                            <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
+                                <h3 className="text-2xl font-semibold text-dark">
+                                    Total: <span className="text-green-600">R$ {totalPrice.toFixed(2)}</span>
+                                </h3>
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={handleClearCart}
+                                        className="rounded border border-gray-400 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                    >
+                                        Limpar Carrinho
+                                    </button>
+                                    <button
+                                        onClick={handleCheckout}
+                                        className="rounded bg-dark px-4 py-2 text-white hover:bg-black"
+                                    >
+                                        Finalizar Pedido
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
