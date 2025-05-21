@@ -1,5 +1,7 @@
 // Funções para gerenciar o carrinho de compras usando localStorage
 
+import api from "./api";
+
 // Obtém o carrinho atual do localStorage
 export const getCart = () => {
     const cart = localStorage.getItem('cart');
@@ -11,19 +13,41 @@ export const saveCart = (cart) => {
     localStorage.setItem('cart', JSON.stringify(cart));
 };
 
-// Adiciona um produto ao carrinho
-export const addToCart = (product) => {
-    const cart = getCart();
-    const existingProduct = cart.find(item => item.id === product.id);
+export const addToCart = async (product) => {
+    const cart = getCart(); // Recupera o carrinho do localStorage ou de onde for necessário
 
-    if (existingProduct) {
-        existingProduct.quantity += 1;
-    } else {
-        cart.push({ ...product, quantity: 1 });
+    try {
+        // Verifica as tags do produto na API
+        const response = await api.get(`/products/${product.id}/tags`);
+        const productTags = response.data;
+
+        // Verifica se o produto tem a tag "cartão"
+        const hasCartaoTag = productTags.includes('cartão');
+
+        if (hasCartaoTag) {
+            // Se tiver a tag "cartão", adiciona o produto ao carrinho com quantity = 1
+            cart.push({ ...product, quantity: 1, tagCartao: true, text: "" });
+        } else {
+            // Se o produto não tiver a tag "cartão", busca no carrinho se o produto já existe
+            const existingProduct = cart.find(item => item.id === product.id && !item.tagCartao);
+
+            if (existingProduct) {
+                // Se o produto já estiver no carrinho, apenas incrementa a quantidade
+                existingProduct.quantity += 1;
+            } else {
+                // Caso o produto não exista no carrinho, adiciona ele com quantity = 1
+                cart.push({ ...product, quantity: 1 });
+            }
+        }
+
+        // Salva o carrinho atualizado
+        saveCart(cart);
+
+    } catch (error) {
+        console.error('Erro ao verificar as tags do produto:', error);
     }
-
-    saveCart(cart);
 };
+
 
 // Remove um produto do carrinho
 export const removeFromCart = (productId) => {

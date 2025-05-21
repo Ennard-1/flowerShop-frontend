@@ -2,9 +2,7 @@ import axios from 'axios';
 
 // Criando uma instância do Axios
 const api = axios.create({
-  baseURL: import.meta.env.MODE === 'development' 
-    ? 'http://localhost:3000/api' // URL da API no ambiente de desenvolvimento
-    : '', // Caminho relativo no ambiente de produção
+  baseURL: '/api'
 });
 
 // Interceptor para adicionar o token no cabeçalho de cada requisição

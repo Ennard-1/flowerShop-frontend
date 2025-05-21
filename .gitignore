@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 guidelines.md
+.env
+src/assets/*
+!src/assets/.gitkeep

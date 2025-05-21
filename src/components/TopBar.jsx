@@ -2,12 +2,13 @@ import { Link } from "react-router-dom";
 import { ShoppingCart, Phone, MapPin } from "lucide-react";
 
 function TopBar() {
+  const shopName = import.meta.env.VITE_SHOP_NAME
   return (
     <header className="bg-white shadow-md">
       <div className="container mx-auto flex items-center justify-between px-4 py-4">
         {/* Nome da loja */}
         <Link to="/" className="text-2xl font-bold text-dark">
-          Minha Loja
+          {shopName}
         </Link>
 
         {/* Ícones */}
@@ -20,7 +21,7 @@ function TopBar() {
             <Phone className="h-6 w-6 text-dark hover:text-primary transition-colors" />
           </Link>
 
-          <Link to="/localizacao" aria-label="Localização">
+          <Link to="/endereco" aria-label="Localização">
             <MapPin className="h-6 w-6 text-dark hover:text-primary transition-colors" />
           </Link>
         </nav>
