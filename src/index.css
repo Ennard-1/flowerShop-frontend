@@ -1,14 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #f44174; /* Cor principal - Destaques e botões */
-  --color-secondary: #f7e1d7; /* Fundo da página - Suave e neutro */
-  --color-dark: #0c120c; /* Texto principal - Alto contraste */
-  --color-accent: #f44174; /* Cor de destaque */
-  --color-background: #FDF5F5; /* Fundo geral da página */
-  --color-secondary-text: #6b6b6b; /* Texto secundário - Contraste suave */
-  --color-link: #f44174; /* Links - Chamativo e consistente */
-  --color-success: #4caf50; /* Verde para sucessos e confirmações */
-  --color-alert: #ff5733; /* Laranja para alertas e erros */
-  --color-card-background: #ffffff; /* Fundo dos cards - Branco neutro */
+  --color-primary: #f44174;
+  /* Cor principal - Destaques e botões */
+  --color-secondary: #f7e1d7;
+  /* Fundo da página - Suave e neutro */
+  --color-dark: #0c120c;
+  /* Texto principal - Alto contraste */
+  --color-accent: #f44174;
+  /* Cor de destaque */
+  --color-background: #FDF5F5;
+  /* Fundo geral da página */
+  --color-secondary-text: #6b6b6b;
+  /* Texto secundário - Contraste suave */
+  --color-link: #f44174;
+  /* Links - Chamativo e consistente */
+  --color-success: #4caf50;
+  /* Verde para sucessos e confirmações */
+  --color-alert: #ff5733;
+  /* Laranja para alertas e erros */
+  --color-card-background: #ffffff;
+  /* Fundo dos cards - Branco neutro */
+}
+
+@layer base {
+  :root {
+    /* Configuração de fontes */
+    --font-sans: 'Poppins', sans-serif;
+    /* Exemplo com Poppins */
+  }
+
+  /* Aplicando a fonte padrão */
+  html {
+    font-family: var(--font-sans);
+  }
 }

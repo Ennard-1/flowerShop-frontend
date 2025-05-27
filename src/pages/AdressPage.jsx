@@ -27,7 +27,7 @@ const AdressPage = () => {
         transition={{ duration: 0.6 }}
       >
         <img
-          src="/images/frente-loja.jpg"
+          src="./src/assets/StreetPhoto.jpg"
           alt="Frente da loja"
           className="w-full aspect-video object-cover"
         />

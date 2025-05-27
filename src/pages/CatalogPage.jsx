@@ -13,7 +13,7 @@ const pageTransition = {
   duration: 0.4,
   ease: "easeInOut",
 };
-const Catalog = () => {
+const CatalogPage = () => {
   // Estado para armazenar os produtos
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -136,4 +136,4 @@ const Catalog = () => {
   );
 };
 
-export default Catalog;
+export default CatalogPage;

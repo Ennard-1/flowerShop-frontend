@@ -1,271 +1,210 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pen, Trash2 } from "lucide-react";
-import { getCart, updateCartQuantity, removeFromCart, clearCart, saveCart } from "../services/cart";
+import {
+    getCart,
+    removeFromCart,
+    updateCartItemText,
+    updateCartItemQuantity,
+    clearCart
+} from "../services/cart";
 import api from "../services/api";
+import { Link } from "react-router-dom";
 
 const CartPage = () => {
     const [cartItems, setCartItems] = useState([]);
-    const navigate = useNavigate();
-    const [selectedItemIndex, setSelectedItemIndex] = useState(null);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingItemId, setEditingItemId] = useState(null);
     const [cardText, setCardText] = useState("");
+    const [productImages, setProductImages] = useState({});
 
     useEffect(() => {
-        const loadCartWithTags = async () => {
+        const loadCartData = async () => {
             const items = getCart();
+            setCartItems(items);
 
-            const updatedItems = await Promise.all(
-                items.map(async (item) => {
-                    try {
-                        const res = await fetch(`/api/products/${item.id}/tags`);
-                        const tags = await res.json();
-                        const hasCartao = tags.some(tag => tag.name.toLowerCase() === "cartão");
-                        return { ...item, tagCartao: hasCartao };
-                    } catch (error) {
-                        console.error("Erro ao buscar tags:", error);
-                        return item;
-                    }
-                })
-            );
-            const itensWithImages = await Promise.all(
-                items.map(async (item) => {
-                  try {
-                    const imageResponse = await api.get(
-                      `/products/${item.id}/images`,
-                    );
-                    const firstImage =
-                      imageResponse.data.length > 0
-                        ? imageResponse.data[0].image
-                        : null;
-                    return { ...item, image: firstImage };
-                  } catch (error) {
-                    console.error(
-                      `Erro ao buscar imagem para o produto ${item.id}:`,
-                      error,
-                    );
-                    return { ...item, image: null };
-                  }
-                }),
-              );
-            setCartItems(itensWithImages);
+            try {
+                const imagesResponse = await Promise.all(
+                    items.map(item =>
+                        api.get(`/products/${item.id}/images`)
+                            .then(res => ({ id: item.id, data: res.data }))
+                    )
+                );
+
+                const imagesMap = {};
+                imagesResponse.forEach(response => {
+                    imagesMap[response.id] = response.data[0]?.image
+                        ? `${api.defaults.baseURL}${response.data[0].image}`
+                        : '/placeholder.jpg';
+                });
+
+                setProductImages(imagesMap);
+            } catch (error) {
+                console.error("Erro ao carregar imagens:", error);
+                const fallbackImages = {};
+                items.forEach(item => {
+                    fallbackImages[item.id] = '/placeholder.jpg';
+                });
+                setProductImages(fallbackImages);
+            }
         };
 
-        loadCartWithTags();
+        loadCartData();
     }, []);
 
-
-    const handleQuantityChange = (productId, quantity) => {
-        updateCartQuantity(productId, quantity);
-        setCartItems(getCart());
+    const handleRemoveItem = (cartItemId) => {
+        setCartItems(removeFromCart(cartItemId));
     };
 
-    const handleRemoveItem = (productId) => {
-        removeFromCart(productId);
-        setCartItems(getCart());
+    const handleQuantityChange = (cartItemId, newQuantity) => {
+        if (newQuantity < 1) return;
+        setCartItems(updateCartItemQuantity(cartItemId, newQuantity));
     };
 
-    const handleClearCart = () => {
-        clearCart();
-        setCartItems([]);
-    };
-
-    const handleCheckout = () => {
-        alert("Pedido finalizado com sucesso!");
-        clearCart();
-        navigate("/");
-    };
-
-    const handleOpenDialog = (index) => {
-        setSelectedItemIndex(index);
-        setCardText(cartItems[index].text || "");
-        setIsDialogOpen(true);
-    };
-
-    const handleSaveText = () => {
-        // Verifica se o índice selecionado é válido
-        if (selectedItemIndex === null) return;
-    
-        const updatedItems = [...cartItems];
-        
-        // Atualiza o texto do produto com base no índice
-        updatedItems[selectedItemIndex].text = cardText;
-    
-        // Salva o carrinho atualizado (presumivelmente em localStorage ou outro armazenamento)
-        saveCart(updatedItems);
-        
-        // Atualiza o estado do carrinho no componente
+    const handleSaveCardText = () => {
+        if (!editingItemId) return;
+        const updatedItems = updateCartItemText(editingItemId, cardText);
         setCartItems(updatedItems);
-        
-        // Fecha o diálogo
-        setIsDialogOpen(false);
+        setEditingItemId(null);
+        setCardText("");
     };
-    
 
-    const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const totalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="bg-background min-h-screen px-4 py-10"
-        >
-            <div className="container mx-auto max-w-4xl">
-                <h1 className="mb-8 text-center text-3xl font-bold text-dark">Carrinho de Compras</h1>
-    
+        <div className="bg-muted min-h-screen py-10 px-4">
+            <div className="max-w-4xl mx-auto">
+                <h1 className="text-4xl font-bold text-center text-foreground mb-10">
+                    Seu Carrinho
+                </h1>
+
                 {cartItems.length === 0 ? (
-                    <p className="text-center text-muted text-lg">Seu carrinho está vazio.</p>
+                    <p className="text-center text-muted-foreground text-lg">
+                        Seu carrinho está vazio.
+                    </p>
                 ) : (
                     <>
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             <AnimatePresence>
-                                {cartItems.flatMap((item, index) => {
-                                    if (item.tagCartao) {
-                                        return Array.from({ length: item.quantity }, (_, i) => ({
-                                            ...item,
-                                            quantity: 1,
-                                            key: `${item.id}-${index}-${i}`,
-                                            originalIndex: index
-                                        }));
-                                    }
-                                    return [{ ...item, key: `${item.id}-${index}`, originalIndex: index }];
-                                }).map((item, i) => (
+                                {cartItems.map((item) => (
                                     <motion.div
-                                        key={item.id}
+                                        key={item.cartItemId}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 20 }}
                                         transition={{ duration: 0.3 }}
-                                        className="mb-4 flex items-start justify-between gap-4 rounded-lg bg-white p-4 shadow-md flex-row sm:items-center"
+                                        className="bg-white p-4 rounded-2xl shadow-sm flex gap-4 items-center"
                                     >
-                                        <div className="flex items-center gap-4">
-                                            {/* Imagem do Produto */}
-                                           
-                                                <img 
-                                                    src={item.image ? `${api.defaults.baseURL}${item.image}` : "/placeholder.jpg"} 
-                                                    alt={item.name} 
-                                                    className="h-16 w-16 object-cover rounded-md"
-                                                />
-                                           
-                                            <div>
-                                                <h5 className="text-lg font-semibold text-dark">{item.name}</h5>
-                                                <p className="text-muted text-sm">R$ {item.price.toFixed(2)}</p>
+                                        {/* Imagem */}
+                                        <div className="flex-shrink-0">
+                                            <img
+                                                src={productImages[item.id] || '/placeholder.jpg'}
+                                                alt={item.name}
+                                                className="w-20 h-20 object-cover rounded-xl shadow-sm"
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = '/placeholder.jpg';
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* Conteúdo e botões */}
+                                        <div className="flex flex-grow items-center">
+                                            {/* Conteúdo (nome, preço, texto) */}
+                                            <div className="flex flex-col justify-center">
+                                                <h3 className="font-medium text-sm">{item.name}</h3>
+                                                <p className="text-gray-600 text-sm">R$ {item.price}</p>
+                                                {!item.isCard && (
+                                                    <p className="text-xs text-gray-500">Quantidade: {item.quantity}</p>
+                                                )}
+                                                {item.isCard && item.text && (
+                                                    <p className="text-xs text-gray-500 mt-1">Mensagem: "{item.text}"</p>
+                                                )}
+                                            </div>
+
+
+                                            {/* Botões à direita */}
+                                            <div className="ml-auto flex gap-2">
+                                                {item.isCard && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingItemId(item.cartItemId);
+                                                            setCardText(item.text || "");
+                                                        }}
+                                                        className="text-blue-500 hover:text-blue-700 self-start mr-4 "
+                                                        aria-label="Editar mensagem"
+                                                    >
+                                                        <Pen size={18} />
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => handleRemoveItem(item.cartItemId)}
+                                                    className="text-red-500 hover:text-red-700 self-start"
+                                                    aria-label="Remover item"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
                                             </div>
                                         </div>
-    
-                                        <div className="flex items-center gap-3">
-                                            {/* Controle de Quantidade, apenas se não for um cartão */}
-                                            {!item.tagCartao && (
-                                                <div className="flex items-center border rounded-lg overflow-hidden">
-                                                    <button
-                                                        className="px-3 py-1 text-xl bg-gray-200 hover:bg-gray-300"
-                                                        onClick={() => handleQuantityChange(item.id, Math.max(1, item.quantity - 1))}
-                                                    >
-                                                        −
-                                                    </button>
-                                                    <div className="w-10 text-center text-lg font-medium">{item.quantity}</div>
-                                                    <button
-                                                        className="px-3 py-1 text-xl bg-gray-200 hover:bg-gray-300"
-                                                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                                    >
-                                                        +
-                                                    </button>
-                                                </div>
-                                            )}
-    
-                                            {item.tagCartao && (
-                                                <button
-                                                    onClick={() => handleOpenDialog(item.originalIndex)}
-                                                    className="text-blue-500 hover:text-blue-700 text-lg"
-                                                >
-                                                   <Pen/>
-                                                </button>
-                                            )}
-    
-                                            {/* Botão de Remover */}
-                                            <button
-                                                className="text-red-500 hover:text-red-700"
-                                                onClick={() => handleRemoveItem(item.id)}
-                                                aria-label="Remover item"
-                                            >
-                                                <Trash2 size={24} />
-                                            </button>
-                                        </div>
                                     </motion.div>
+
+
+
                                 ))}
                             </AnimatePresence>
                         </div>
-    
-                        <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
-                            <h3 className="text-2xl font-semibold text-dark">
-                                Total: <span className="text-green-600">R$ {totalPrice.toFixed(2)}</span>
-                            </h3>
-                            <div className="flex gap-4">
+
+                        <div className="mt-10 flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <p className="text-xl font-semibold text-foreground">
+                                Total: R$ {totalPrice.toFixed(2)}
+                            </p>
+                            <div className="flex gap-3">
                                 <button
-                                    onClick={handleClearCart}
-                                    className="rounded border border-gray-400 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                    onClick={() => { clearCart(), setCartItems([]) }}
+                                    className="px-4 py-2 border border-border text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                                 >
                                     Limpar Carrinho
                                 </button>
-                                <button
-                                    onClick={handleCheckout}
-                                    className="rounded bg-dark px-4 py-2 text-white hover:bg-black"
+                                <Link to={"/checkout"}
+
+                                    className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
                                 >
-                                    Finalizar Pedido
-                                </button>
+                                    Finalizar Compra
+                                </Link>
                             </div>
                         </div>
                     </>
                 )}
-            </div>
-    
-            {/* Modal para editar o texto do cartão */}
-            <AnimatePresence>
-                {isDialogOpen && (
-                    <motion.div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setIsDialogOpen(false)}
-                    >
-                        <motion.div
-                            className="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full"
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.8, opacity: 0 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <h2 className="text-lg font-bold mb-4">Mensagem do Cartão</h2>
+
+                {editingItemId && (
+                    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
+                        <div className="bg-white dark:bg-card rounded-2xl p-6 w-full max-w-md shadow-lg border border-border">
+                            <h3 className="text-lg font-semibold mb-4">Editar Mensagem</h3>
                             <textarea
-                                className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-dark text-lg"
-                                rows="4"
                                 value={cardText}
                                 onChange={(e) => setCardText(e.target.value)}
+                                className="w-full border border-border rounded-lg p-3 mb-4 text-sm"
+                                rows={4}
+                                placeholder="Digite sua mensagem..."
                             />
-                            <div className="mt-4 flex justify-end gap-2">
+                            <div className="flex justify-end gap-2">
                                 <button
-                                    onClick={() => setIsDialogOpen(false)}
-                                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                                    onClick={() => setEditingItemId(null)}
+                                    className="px-4 py-2 border text-sm rounded-lg"
                                 >
                                     Cancelar
                                 </button>
                                 <button
-                                    onClick={handleSaveText}
-                                    className="px-4 py-2 bg-dark text-white rounded hover:bg-dark/90"
+                                    onClick={handleSaveCardText}
+                                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
                                 >
                                     Salvar
                                 </button>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </div>
+                    </div>
                 )}
-            </AnimatePresence>
-        </motion.div>
+            </div>
+        </div>
     );
 };
 

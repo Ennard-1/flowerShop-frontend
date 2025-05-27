@@ -1,11 +1,12 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../services/api";
 import EditProductDialog from "../components/EditProductDialog";
 import EditProductImagesDialog from "../components/EditProductImagesDialog";
 import AddProductDialog from "../components/AddProductDialog";
 import TagManagerDialog from "../components/TagManagerDialog";
+import StoreSettingsDialog from "../components/StoreSettingsDialog";
 
-const ProductList = () => {
+const AdminProductListPage = () => {
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -15,6 +16,7 @@ const ProductList = () => {
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
     const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+    const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -80,6 +82,13 @@ const ProductList = () => {
                 >
                     Gerenciar Tags
                 </button>
+                <button
+                    className="bg-purple-500 text-white py-2 px-4 rounded"
+                    onClick={() => setIsSettingsDialogOpen(true)}
+                >
+                    Configurações da Loja
+                </button>
+
             </div>
 
             {/* Conteúdo Principal */}
@@ -104,7 +113,7 @@ const ProductList = () => {
                         >
                             {/* Imagem */}
                             <img
-                                 src={product.image ? `${api.defaults.baseURL}${product.image}` : "/placeholder.jpg"}
+                                src={product.image ? `${api.defaults.baseURL}${product.image}` : "/placeholder.jpg"}
                                 alt={product.name}
                                 className="w-16 h-16 object-cover rounded mr-4"
                             />
@@ -112,7 +121,7 @@ const ProductList = () => {
                             <div className="flex-1">
                                 <h5 className="text-lg font-bold">{product.name}</h5>
                                 <p className="text-gray-700">Quantidade: {product.quantity}</p>
-                                <p className="text-gray-700">Preço: R$ {product.price.toFixed(2)}</p>
+                                <p className="text-gray-700">Preço: R$ {product.price}</p>
                             </div>
                             {/* Botões */}
                             <div className="flex flex-col space-y-2">
@@ -153,8 +162,13 @@ const ProductList = () => {
                 isOpen={isTagDialogOpen}
                 onClose={() => setIsTagDialogOpen(false)}
             />
+            <StoreSettingsDialog
+                isOpen={isSettingsDialogOpen}
+                onClose={() => setIsSettingsDialogOpen(false)}
+            />
+
         </div>
     );
 };
 
-export default ProductList;
+export default AdminProductListPage;

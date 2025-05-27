@@ -8,12 +8,14 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
   const [price, setPrice] = useState(0);
   const [quantity, setQuantity] = useState(0);
   const [availableTags, setAvailableTags] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]); // vai armazenar nomes das tags
   const [initialTags, setInitialTags] = useState([]);
 
   useEffect(() => {
-    if (isOpen) {
-      fetchTags();
+    if (!isOpen) return;
+
+    const fetchAll = async () => {
+      await fetchTags();
 
       if (product) {
         setName(product.name || "");
@@ -21,18 +23,19 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
         setSlug(product.slug || "");
         setPrice(product.price || 0);
         setQuantity(product.quantity || 0);
-
-        fetchProductTags(product.id);
+        await fetchProductTags(product.id);
       } else {
         resetForm();
       }
-    }
+    };
+
+    fetchAll();
   }, [isOpen, product]);
 
   const fetchTags = async () => {
     try {
       const response = await api.get("/tag");
-      setAvailableTags(response.data);
+      setAvailableTags(response.data); // assume que response.data é array de { id, name }
     } catch (error) {
       console.error("Erro ao buscar tags:", error);
     }
@@ -41,15 +44,14 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
   const fetchProductTags = async (productId) => {
     try {
       const response = await api.get(`/products/${productId}/tags`);
-      console.log("Resposta da API de tags associadas ao produto:", response.data);
-  
-      const associatedTags = response.data.map((tag) => tag.tagId);
-      setSelectedTags(associatedTags);
-      setInitialTags(associatedTags);
+      // response.data é um array simples de strings
+      setSelectedTags(response.data);
+      setInitialTags(response.data);
     } catch (error) {
       console.error("Erro ao buscar tags do produto:", error);
     }
   };
+
 
   const resetForm = () => {
     setName("");
@@ -61,18 +63,19 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
     setInitialTags([]);
   };
 
-  const handleTagChange = (tagId) => {
+  const handleTagChange = (tagName) => {
     setSelectedTags((prevSelectedTags) =>
-      prevSelectedTags.includes(tagId)
-        ? prevSelectedTags.filter((id) => id !== tagId)
-        : [...prevSelectedTags, tagId]
+      prevSelectedTags.includes(tagName)
+        ? prevSelectedTags.filter((name) => name !== tagName)
+        : [...prevSelectedTags, tagName]
     );
   };
 
   const handleSave = async () => {
     try {
-      const addedTags = selectedTags.filter((id) => !initialTags.includes(id));
-      const removedTags = initialTags.filter((id) => !selectedTags.includes(id));
+      // Comparar nomes das tags para saber quais foram adicionadas e removidas
+      const addedTags = selectedTags.filter((name) => !initialTags.includes(name));
+      const removedTags = initialTags.filter((name) => !selectedTags.includes(name));
 
       const updatedProduct = {
         name,
@@ -85,19 +88,31 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
       if (product?.id) {
         await api.put(`/products/${product.id}`, updatedProduct);
 
-        for (const tagId of addedTags) {
-          await api.post(`/tags/${product.id}/${tagId}`);
+        // Para adicionar tags, precisamos do ID do produto e da tag
+        // Mas temos só o nome da tag no estado, então precisamos buscar o ID da tag pelo nome
+        for (const tagName of addedTags) {
+          const tagObj = availableTags.find((t) => t.name === tagName);
+          if (tagObj) {
+            await api.post(`/tags/${product.id}/${tagObj.id}`);
+          }
         }
 
-        for (const tagId of removedTags) {
-          await api.delete(`/product/${product.id}/${tagId}`);
+        for (const tagName of removedTags) {
+          const tagObj = availableTags.find((t) => t.name === tagName);
+          if (tagObj) {
+            await api.delete(`/product/${product.id}/${tagObj.id}`);
+          }
         }
       } else {
+        // Criar novo produto
         const response = await api.post("/products", updatedProduct);
         const newProductId = response.data.id;
 
-        for (const tagId of selectedTags) {
-          await api.post(`/tags/${newProductId}/${tagId}`);
+        for (const tagName of selectedTags) {
+          const tagObj = availableTags.find((t) => t.name === tagName);
+          if (tagObj) {
+            await api.post(`/tags/${newProductId}/${tagObj.id}`);
+          }
         }
       }
 
@@ -125,12 +140,18 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
               onClick={onClose}
               aria-label="Close"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <form onSubmit={handleSave} className="p-6">
+          <form onSubmit={(e) => e.preventDefault()} className="p-6">
             <div className="space-y-4">
               <div>
                 <label htmlFor="productName" className="block text-sm font-medium text-gray-700">
@@ -156,8 +177,6 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
-
-        
 
               <div>
                 <label htmlFor="productPrice" className="block text-sm font-medium text-gray-700">
@@ -192,10 +211,10 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
                   {availableTags.map((tag) => (
                     <div key={tag.id} className="form-check">
                       <input
-                        className="form-check-input"
                         type="checkbox"
-                        checked={selectedTags.includes(tag.id)}
-                        onChange={() => handleTagChange(tag.id)}
+                        className="form-check-input"
+                        checked={selectedTags.includes(tag.name)}
+                        onChange={() => handleTagChange(tag.name)}
                         id={`tag${tag.id}`}
                       />
                       <label className="form-check-label" htmlFor={`tag${tag.id}`}>
@@ -203,6 +222,7 @@ const EditProductDialog = ({ product, isOpen, onClose }) => {
                       </label>
                     </div>
                   ))}
+
                 </div>
               </div>
             </div>

@@ -2,7 +2,12 @@ import axios from 'axios';
 
 // Criando uma instância do Axios
 const api = axios.create({
-  baseURL: '/api'
+  baseURL: '/api',
+  withCredentials: false,
+  headers: {
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  }
 });
 
 // Interceptor para adicionar o token no cabeçalho de cada requisição
@@ -17,7 +22,7 @@ api.interceptors.request.use(
     if (config.data instanceof FormData) {
       config.headers['Content-Type'] = 'multipart/form-data';
     }
-    
+
     return config;
   },
   (error) => {
