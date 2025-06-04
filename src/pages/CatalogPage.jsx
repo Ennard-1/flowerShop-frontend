@@ -25,7 +25,7 @@ const CatalogPage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await api.get("/products");
+        const response = await api.get("/regular-products");
         const productsData = response.data;
 
         // Buscar a primeira imagem para cada produto

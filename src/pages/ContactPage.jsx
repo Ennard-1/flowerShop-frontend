@@ -22,7 +22,7 @@ const ContactPage = () => {
                 <div className="flex items-center p-5">
                     <div className="w-16 h-16 rounded-full border-4 border-white overflow-hidden">
                         <img
-                            src="./src/assets/whatsappProfilePicture.jpg"
+                            src="/whatsappProfilePicture.jpg"
                             alt="WhatsApp profile"
                             className="w-full h-full object-cover"
                         />
@@ -50,7 +50,7 @@ const ContactPage = () => {
                 <div className="flex items-center p-5">
                     <div className="w-16 h-16 rounded-full border-4 border-white overflow-hidden">
                         <img
-                            src="./src/assets/instagramProfilePicture.jpg"
+                            src="/instagramProfilePicture.jpg"
                             alt="Instagram profile"
                             className="w-full h-full object-cover"
                         />
