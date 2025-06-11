@@ -67,10 +67,6 @@ const CheckoutPage = () => {
                 // Buscar configurações
                 const settingsResponse = await api.get("/settings");
                 const settingsData = settingsResponse.data;
-                settingsData.openingHour = settingsData.openingHour?.slice(0, 5) || "08:00";
-                settingsData.closingHour = settingsData.closingHour?.slice(0, 5) || "18:00";
-                settingsData.availableDays = settingsData.availableDays || [];
-                settingsData.specificAvailableDates = settingsData.specificAvailableDates || [];
                 setSettings(settingsData);
 
                 // Buscar cartões
@@ -241,9 +237,9 @@ const CheckoutPage = () => {
     // Função para obter o texto do botão do cartão
     const getCardButtonText = (card) => {
         if (card.name.includes('cortesia')) {
-            return `Cartão Cortesia (Grátis) - Até 100 caracteres`;
+            return `Cartão Cortesia (Grátis) - Até 80 caracteres`;
         } else if (card.name.includes('customizado')) {
-            return `Cartão Customizado (R$ ${card.price}) - Até 300 caracteres`;
+            return `Cartão Customizado (R$ ${card.price}) - Até 120 caracteres`;
         }
         return card.name;
     };
@@ -310,7 +306,7 @@ const CheckoutPage = () => {
                             <div className="space-y-4">
                                 <input
                                     type="text"
-                                    placeholder="Nome"
+                                    placeholder={tipoRetirada === 'loja' ? 'Nome de quem vai Retirar?' : 'Nome de quem vai Receber'}
                                     className={`w-full px-4 py-3 rounded-lg border ${errors.nome ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-dark`}
                                     value={inputs.nome}
                                     onChange={(e) => handleChange('nome', e.target.value)}
@@ -319,7 +315,7 @@ const CheckoutPage = () => {
 
                                 <input
                                     type="tel"
-                                    placeholder="Telefone (ex: 99 99999-9999)"
+                                    placeholder={tipoRetirada === 'loja' ? 'Telefone de quem vai retirar?' : 'Telefone de quem vai Receber?'}
                                     maxLength={14}
                                     className={`w-full px-4 py-3 rounded-lg border ${errors.telefone ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-dark`}
                                     value={inputs.telefone}
@@ -468,7 +464,7 @@ const CheckoutPage = () => {
                                                     value={cartao.mensagem}
                                                     onChange={(e) => {
                                                         const selectedCard = getSelectedCard();
-                                                        const maxChars = selectedCard?.name.includes('cortesia') ? 100 : 300;
+                                                        const maxChars = selectedCard?.name.includes('cortesia') ? 80 : 120;
                                                         if (e.target.value.length <= maxChars) {
                                                             setCartao(prev => ({ ...prev, mensagem: e.target.value }));
                                                         }
@@ -480,7 +476,7 @@ const CheckoutPage = () => {
                                                             : 'text-gray-500'
                                                         }`}
                                                 >
-                                                    {cartao.mensagem.length}/{getSelectedCard()?.name.includes('cortesia') ? 100 : 300} caracteres
+                                                    {cartao.mensagem.length}/{getSelectedCard()?.name.includes('cortesia') ? 80 : 120} caracteres
                                                 </div>
                                                 {errors.mensagem && <p className="text-red-600 text-sm">{errors.mensagem}</p>}
                                             </div>

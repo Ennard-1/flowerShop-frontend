@@ -127,7 +127,9 @@ const ProductDetailPage = () => {
               >
                 <h2 className="text-dark mb-4 text-2xl font-semibold">Descrição</h2>
                 <p className="text-muted mb-6">{product.description}</p>
-
+                <p className="text-red-600 font-semibold mb-6">
+                  Atenção: Verifique com o vendedor a disponibilidade do produto
+                </p>
                 <div className="mb-6">
                   <h3 className="text-dark text-xl font-semibold">Preço:</h3>
                   <p className="text-dark text-3xl font-bold">
